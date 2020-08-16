@@ -3,6 +3,7 @@ import os
 import sqlite3
 import tkinter.ttk as ttk
 
+
 class Application:
     def __init__(self, parent):
         self.parent = parent
@@ -23,20 +24,40 @@ class Application:
         self.student_del_button = tk.Button(parent, text='Delete student', command=self.press_del_student)
         self.student_del_button.grid(row=1, column=5, padx=2, pady=2)
 
+        self.subject_headers = self.get_headers(self.subject_var.get())
+        self.subject_rows = self.get_rows(self.subject_var.get())
+        print(self.subject_rows)
+
+        table = Table(parent, headings=self.subject_headers, rows=self.subject_rows)
+        table.grid(row=2, column=1, columnspan=5)
+
+
     def connect_db(self):
         dbname = 'database.db'
         path = os.getcwd()
         self.conn = sqlite3.connect(path + '\\' + dbname)
         self.cursor = self.conn.cursor()
 
+    def get_headers(self, table):
+        self.cursor.execute('select * from %s' % (table))
+        res = []
+        for i in self.cursor.description:
+            res.append(i[0])
+        return res
+
+    def get_rows(self, table):
+        self.cursor.execute('select * from %s' % (table))
+        res = self.cursor.fetchall()
+        return res
+
     def _delete_window(self):
-        print(12112)
+        self.conn.commit()
         self.conn.close()
         self.parent.destroy()
 
     def get_subjects(self):
         res = self.conn.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        subject_list=[]
+        subject_list = []
         for name in res:
             subject_list.append(name[0])
         return subject_list
@@ -52,6 +73,7 @@ class Application:
 
     def press_del_student(self):
         pass
+
 
 class Table(tk.Frame):
     def __init__(self, parent=None, headings=tuple(), rows=tuple()):
@@ -72,5 +94,3 @@ class Table(tk.Frame):
         table.configure(yscrollcommand=scrolltable.set)
         scrolltable.pack(side=tk.RIGHT, fill=tk.Y)
         table.pack(expand=tk.YES, fill=tk.BOTH)
-
-
