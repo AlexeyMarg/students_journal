@@ -74,7 +74,7 @@ class Application:
     def press_add_subject(self):
         self.add_subject_window = tk.Toplevel(self.parent)
         self.add_subject_window.title('Add subject')
-        self.add_subject_label = tk.Label(self.add_subject_window, text='Enter headings via ,:')
+        self.add_subject_label = tk.Label(self.add_subject_window, text='Enter Name and headings via ,:')
         self.add_subject_label.grid(row=1, column=1, padx=2, pady=2, sticky='w')
         self.add_subject_entry = tk.Entry(self.add_subject_window, width=50)
         self.add_subject_entry.grid(row=2, column=1, padx=2, pady=2)
@@ -82,12 +82,34 @@ class Application:
         self.add_subject_button.grid(row=3, column=1, padx=2, pady=2)
 
     def add_subject(self):
-        print(self.add_subject_entry.get())
+        s = self.add_subject_entry.get().replace(', ', ',').split(sep=',')
+        self.cursor.execute('CREATE TABLE %s (Name CHAR(255), Group_number CHAR(255)   )' % (s[0],))
+        self.subject_list.append(s[0],)
+        self.subject_option['menu'].delete(0, 'end')
+        table = s[0]
+        s = s[1:]
+        for i in s:
+            self.cursor.execute('ALTER TABLE %s ADD COLUMN %s INT' % (table, i))
+        self.subject_option.destroy()
+        self.subject_var.set(self.subject_list[0])
+        self.subject_option = tk.OptionMenu(self.parent, self.subject_var, *self.subject_list,
+                                            command=self.subject_selection)
+        self.subject_option.config(width=15)
+        self.subject_option.grid(row=1, column=1, padx=2, pady=2)
+        self.add_subject_window.destroy()
 
     def press_del_subject(self):
+        subject = self.subject_var.get()
         answer = mb.askyesno(title="Removing", message="Do you want to remove selected subject?")
         if answer:
-            print('Subject is removed')
+            self.cursor.execute("DROP TABLE %s" % (subject,))
+            self.subject_list.remove(subject)
+            self.subject_option.destroy()
+            self.subject_var.set(self.subject_list[0])
+            self.subject_option = tk.OptionMenu(self.parent, self.subject_var, *self.subject_list,
+                                                command=self.subject_selection)
+            self.subject_option.config(width=15)
+            self.subject_option.grid(row=1, column=1, padx=2, pady=2)
 
 
     def press_add_student(self):
