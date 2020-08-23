@@ -55,6 +55,8 @@ class Application:
         table = self.subject_var.get()
         headers = self.get_headers(table)
         rows = self.get_rows(table)
+        self.subject_headers = headers
+        self.subject_rows = rows
         self.table = Table(self.parent, headings=headers, rows=rows)
         self.table.grid(row=2, column=1, columnspan=len(headers))
 
@@ -89,7 +91,7 @@ class Application:
         table = s[0]
         s = s[1:]
         for i in s:
-            self.cursor.execute('ALTER TABLE %s ADD COLUMN %s INT' % (table, i))
+            self.cursor.execute('ALTER TABLE %s ADD COLUMN %s INT' % (table, str(i)))
         self.subject_option.destroy()
         self.subject_var.set(self.subject_list[0])
         self.subject_option = tk.OptionMenu(self.parent, self.subject_var, *self.subject_list,
@@ -130,15 +132,32 @@ class Application:
 
     def add_student(self):
         s = self.add_student_entry.get().replace(', ', ',').split(',')
+        subject = self.subject_var.get()
         if len(s) != len(self.subject_headers):
             mb.showerror("Error!", "Wrong input data")
         else:
-            print(s)
+            sql = 'INSERT INTO ' + subject + ' ('
+            for i in self.subject_headers[:-1]:
+                sql = sql + i + ', '
+            sql = sql + self.subject_headers[-1] + ') VALUES ('
+            sql = sql + '\'' + s[0] + '\', ' + '\'' + s[1] + '\', '
+            for i in s[2:-1]:
+                sql = sql + i + ', '
+            sql = sql + s[-1] + ')'
+            self.cursor.execute(sql)
+            self.table.destroy()
+            self.subject_headers = self.get_headers(subject)
+            self.subject_rows = self.get_rows(subject)
+            self.table = Table(self.parent, headings=self.subject_headers, rows=self.subject_rows)
+            self.table.grid(row=2, column=1, columnspan=len(self.subject_headers))
+            self.add_student_window.destroy()
+
 
     def press_del_student(self):
         answer = mb.askyesno(title="Removing", message="Do you want to remove selected student?")
         if answer:
-            print('Student is removed')
+            student = self.table.getvar()
+            print('Student')
 
 
 class Table(tk.Frame):
