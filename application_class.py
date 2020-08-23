@@ -156,26 +156,27 @@ class Application:
     def press_del_student(self):
         answer = mb.askyesno(title="Removing", message="Do you want to remove selected student?")
         if answer:
-            student = self.table.getvar()
-            print('Student')
+            i = int(self.table.table.selection()[0][-1])
+            print(self.subject_rows[i-1][0])
+            self.cursor.execute('DELETE FROM %s WHERE Name==\'%s\'' % (self.subject_rows[i-1][0]))
 
 
 class Table(tk.Frame):
     def __init__(self, parent=None, headings=tuple(), rows=tuple()):
         super().__init__(parent)
 
-        table = ttk.Treeview(self, show="headings", selectmode="browse")
-        table["columns"] = headings
-        table["displaycolumns"] = headings
+        self.table = ttk.Treeview(self, show="headings", selectmode="browse")
+        self.table["columns"] = headings
+        self.table["displaycolumns"] = headings
 
         for head in headings:
-            table.heading(head, text=head, anchor=tk.CENTER)
-            table.column(head, anchor=tk.CENTER)
+            self.table.heading(head, text=head, anchor=tk.CENTER)
+            self.table.column(head, anchor=tk.CENTER)
 
         for row in rows:
-            table.insert('', tk.END, values=tuple(row))
+            self.table.insert('', tk.END, values=tuple(row))
 
-        scrolltable = tk.Scrollbar(self, command=table.yview)
-        table.configure(yscrollcommand=scrolltable.set)
+        scrolltable = tk.Scrollbar(self, command=self.table.yview)
+        self.table.configure(yscrollcommand=scrolltable.set)
         scrolltable.pack(side=tk.RIGHT, fill=tk.Y)
-        table.pack(expand=tk.YES, fill=tk.BOTH)
+        self.table.pack(expand=tk.YES, fill=tk.BOTH)
